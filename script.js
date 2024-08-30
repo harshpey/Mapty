@@ -72,7 +72,11 @@ class App {
     form.addEventListener('submit',this._newWorkout.bind(this))
     inputType.addEventListener('change', this._toggleElevationField);
   }
+
+
     _getPosition(){
+      console.log('test'  );
+
       if (navigator.geolocation){
       navigator.geolocation.getCurrentPosition(this._loadMap.bind(this),
         function () {
@@ -232,6 +236,9 @@ class App {
   
       form.insertAdjacentHTML('afterend', html);
     }
+    
+
+    
 
     // _moveToPopup(e) {
     //   if (!this.#map) return;
