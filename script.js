@@ -66,17 +66,17 @@ class App {
   #workouts = [];
   #map;
   #mapEvent;
+  #mapZoomLevel = 13;
   constructor(){
-
     this._getPosition();
+    this._getLocalStorage();
     form.addEventListener('submit',this._newWorkout.bind(this))
     inputType.addEventListener('change', this._toggleElevationField);
+    containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
 
 
     _getPosition(){
-      console.log('test'  );
-
       if (navigator.geolocation){
       navigator.geolocation.getCurrentPosition(this._loadMap.bind(this),
         function () {
@@ -94,7 +94,11 @@ class App {
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(this.#map);
 
-      this.#map.on('click',this._showForm.bind(this))
+      this.#map.on('click',this._showForm.bind(this));
+
+      this.#workouts.forEach(work => {
+        this._renderWorkoutMarker(work);
+      });
     }
 
     _showForm(mapE){
@@ -159,13 +163,14 @@ class App {
       }
 
       this.#workouts.push(workout);
-      console.log(this.#workouts);
       
       this._renderWorkoutMarker(workout);
 
       this._renderWorkout(workout);
 
       this._hideForm();
+
+      this._setLocalStorage();
     } 
 
       _renderWorkoutMarker(workout) {
@@ -237,27 +242,45 @@ class App {
       form.insertAdjacentHTML('afterend', html);
     }
     
+    _moveToPopup(e) {
+      if (!this.#map) return;
+  
+      const workoutEl = e.target.closest('.workout');
+  
+      if (!workoutEl) return;
+  
+      const workout = this.#workouts.find(
+        work => work.id === workoutEl.dataset.id
+      );
+  
+      this.#map.setView(workout.cords, this.#mapZoomLevel, {
+        animate: true,
+        pan: {
+          duration: 1,
+        },
+      });
+    }
 
-    
+    _setLocalStorage() {
+      localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+    }
 
-    // _moveToPopup(e) {
-    //   if (!this.#map) return;
+    _getLocalStorage() {
+      const data = JSON.parse(localStorage.getItem('workouts'));
   
-    //   const workoutEl = e.target.closest('.workout');
+      if (!data) return;
   
-    //   if (!workoutEl) return;
+      this.#workouts = data;
   
-    //   const workout = this.#workouts.find(
-    //     work => work.id === workoutEl.dataset.id
-    //   );
+      this.#workouts.forEach(work => {
+        this._renderWorkout(work);
+      });
+    }
   
-    //   this.#map.setView(workout.coords, this.#mapZoomLevel, {
-    //     animate: true,
-    //     pan: {
-    //       duration: 1,
-    //     },
-    //   });
-    // }
+    reset() {
+      localStorage.removeItem('workouts');
+      location.reload();
+    }
     
   }
 
